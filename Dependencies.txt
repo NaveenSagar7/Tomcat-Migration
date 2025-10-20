@@ -1,0 +1,22 @@
+yum update -y
+yum install python3 python3-pip nginx -y
+pip3 install flask gunicorn
+
+Run gunicorn where app.py is deployed:
+nohup gunicorn -w 3 -b 127.0.0.1:8000 app:app &
+
+if running in any other place:
+nohup gunicorn -w 3 -b 127.0.0.1:8000 path.to.app:app &
+
+
+To connect to auroraMySql , we need mysql :
+yum install mysql -y
+
+export MYSQL_HOST=ENDPOINT
+mysql -h endpoint -u username -p
+
+pymysql layer in lambda :
+mkdir pymysql_layer ; cd pymysql_layer ; mkdir python
+pip3 install pymysql -t python/
+zip -r pymysq1_layer.zip python/
+aws s3 cp pymysql_layer.zip s3://realmadrid-players

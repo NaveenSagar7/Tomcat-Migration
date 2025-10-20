@@ -1,0 +1,51 @@
+from flask import Flask, render_template_string
+import mysql.connector
+
+app = Flask(__name__)
+
+# CloudFront URL for static images
+CLOUDFRONT_URL = "https://d1o92qaptx4j65.cloudfront.net"
+
+# Aurora MySQL DB config
+db_config = {
+    'host': 'database-1.cluster-c7uq2skoqqmb.ap-south-1.rds.amazonaws.com',  # 🔁 Replace with actual writer endpoint
+    'user': 'Admin',
+    'password': 'Naveensagar30',  # 🔁 Replace with actual password
+    'database': 'realmadrid_db'
+}
+
+@app.route('/')
+def home():
+    try:
+        # Connect to Aurora DB
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Fetch player data from DB
+        cursor.execute("SELECT player_name, image_file FROM players")
+        rows = cursor.fetchall()
+
+        # Format data for rendering
+        players = []
+        for name, image in rows:
+            players.append({
+                "name": name,
+                "image": f"{CLOUDFRONT_URL}/{image}"
+            })
+
+        cursor.close()
+        conn.close()
+
+        return render_template_string('''
+            <h2>Welcome to RealMadrid Fan App!</h2>
+            <h3>Player Gallery:</h3>
+            {% for player in players %}
+                <div style="margin: 10px;">
+                    <strong>{{ player.name }}</strong><br>
+                    <img src="{{ player.image }}" width="200"><br><br>
+                </div>
+            {% endfor %}
+        ''', players=players)
+
+    except Exception as e:
+        return f"<h3>Error: {str(e)}</h3>"

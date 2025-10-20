@@ -1,0 +1,83 @@
+from flask import Flask, render_template_string, request, redirect
+import mysql.connector
+
+app = Flask(__name__)
+
+# Replace with your actual DB credentials and CloudFront URL
+DB_CONFIG = {
+    'host': 'database-1.cluster-c7uq2skoqqmb.ap-south-1.rds.amazonaws.com',
+    'user': 'Admin',
+    'password': 'Naveensagar30',
+    'database': 'realmadrid_db'
+}
+
+CLOUDFRONT_URL = "https://d1o92qaptx4j65.cloudfront.net"
+
+@app.route('/')
+def home():
+    # Fetch player gallery from DB
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM players")
+    players = cursor.fetchall()
+    for player in players:
+        player['image_file'] = f"{CLOUDFRONT_URL}/{player['image_file']}"
+    conn.close()
+
+    return render_template_string('''
+        <h2>Welcome to RealMadrid Fan App!</h2>
+
+        <h3>User Actions:</h3>
+        <form method="POST" action="/signup">
+            <h4>Signup:</h4>
+            Username: <input name="username" required><br>
+            Password: <input name="password" type="password" required><br>
+            <button type="submit">Signup</button>
+        </form>
+
+        <form method="POST" action="/login" style="margin-top:20px;">
+            <h4>Login:</h4>
+            Username: <input name="username" required><br>
+            Password: <input name="password" type="password" required><br>
+            <button type="submit">Login</button>
+        </form>
+
+        <h3 style="margin-top:40px;">Player Gallery:</h3>
+        {% for player in players %}
+            <div style="margin: 10px;">
+                <strong>{{ player.player_name }}</strong><br>
+                <img src="{{ player.image_file }}" width="200"><br><br>
+            </div>
+        {% endfor %}
+    ''', players=players)
+
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    username = request.form['username']
+    password = request.form['password']
+
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
+    conn.commit()
+    conn.close()
+
+    return redirect('/')
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user:
+        return f"<h3>Welcome back, {username}!</h3><br><a href='/'>Go to Home</a>"
+    else:
+        return "<h3>Login failed. Please try again.</h3><br><a href='/'>Go to Home</a>"

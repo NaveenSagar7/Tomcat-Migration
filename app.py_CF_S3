@@ -1,0 +1,25 @@
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+# Replace this with your real CloudFront domain
+CLOUDFRONT_URL = "https://d1o92qaptx4j65.cloudfront.net"
+
+players = [
+    {"name": "cristiano", "image": f"{CLOUDFRONT_URL}/cristiano.jpg"},
+    {"name": "modric", "image": f"{CLOUDFRONT_URL}/modric.jpg"},
+    {"name": "kross", "image": f"{CLOUDFRONT_URL}/kross.jpg"},
+]
+
+@app.route('/')
+def home():
+    return render_template_string('''
+        <h2>Welcome to RealMadrid Fan App!</h2>
+        <h3>Player Gallery:</h3>
+        {% for player in players %}
+            <div style="margin: 10px;">
+                <strong>{{ player.name }}</strong><br>
+                <img src="{{ player.image }}" width="200"><br><br>
+            </div>
+        {% endfor %}
+    ''', players=players)

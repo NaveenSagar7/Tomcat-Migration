@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "realmadrid-player-images"
+        },
+        "object": {
+          "key": "cristiano.jpg"
+        }
+      }
+    }
+  ]
+}
